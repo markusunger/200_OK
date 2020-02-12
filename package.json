@@ -1,0 +1,17 @@
+{
+  "name": "200_OK",
+  "version": "0.1.0",
+  "description": "An ephemeral, hosted mock API with an optional schema-less auto-mode",
+  "main": "index.js",
+  "repository": "https://github.com/markusunger/200_OK.git",
+  "author": "Markus Unger <schaulustig23@gmail.com>",
+  "license": "GPL-3.0-or-later",
+  "scripts": {
+    "dev": "nodemon ./app.js"
+  },
+  "dependencies": {
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "morgan": "^1.9.1"
+  }
+}
