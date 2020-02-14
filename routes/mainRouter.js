@@ -4,6 +4,8 @@ const devLogger = require('../lib/devLogger');
 const apiIdentify = require('../lib/apiIdentify');
 const pathExtractor = require('../lib/pathExtractor');
 
+const getController = require('../controllers/getController');
+
 const main = express.Router();
 
 main.use(apiIdentify);
