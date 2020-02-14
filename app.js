@@ -11,6 +11,9 @@ const env = process.env.NODE_ENV || 'development';
 
 const app = express();
 
+// security through obscurity \o/
+app.disable('x-powered-by');
+
 // logging middleware for dev environment
 if (env === 'development') app.use(morgan('dev'));
 
@@ -18,10 +21,12 @@ if (env === 'development') app.use(morgan('dev'));
 app.use('/', mainRouter);
 
 // general error handler
-// eslint-disable-next-line no-unused-vars
+// TBD: how any non-500 error is handled
 app.use((err, req, res, next) => {
-  devLogger(err, 'error');
-  res.status(500);
+  // only print strace in dev enviroment
+  if (env === 'development') devLogger(err, 'error');
+  // TODO: maybe receive error codes through error object?
+  if (res.statusCode === 200) res.status(500);
   const error = err.message || 'Internal server error.';
   res.json({ error });
 });

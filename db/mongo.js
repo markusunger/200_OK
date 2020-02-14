@@ -1,5 +1,5 @@
 /*
-  returns an object that holds a reference to the database object
+  returns an object that holds a reference to the database object (db)
   as well as an init method that makes the actual connection asynchronously
 */
 
