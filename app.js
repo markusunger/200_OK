@@ -21,7 +21,9 @@ app.use('/', mainRouter);
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
   devLogger(err, 'error');
-  res.status(500).end();
+  res.status(500);
+  const error = err.message || 'Internal server error.';
+  res.json({ error });
 });
 
 app.listen(config.nodePort, () => devLogger(`Server started on ${config.nodePort}.`));

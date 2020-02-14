@@ -1,3 +1,5 @@
+// wraps the database and provides an objct with all necessary CRUD operations
+
 const store = require('./mongo');
 const devLogger = require('../lib/devLogger');
 
