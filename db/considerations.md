@@ -18,25 +18,25 @@ In a sense, this request route maps perfectly to a nested JSON object:
 
 ```json
 {
-  users: [
+  "users": [
     ...,
     {
-      id: 42,
+      "id": 42,
       ...,
-      images: [
+      "images": [
         ...,
         {
-          id: 23,
+          "id": 23,
           ...,
-          comments: [
+          "comments": [
             ...,
             {
-              id: 5,
+              "id": 5,
               ...,
-              votes: [
+              "votes": [
                 ...,
                 {
-                  id: 2,
+                  "id": 2,
                   ...
                 }
               ]
