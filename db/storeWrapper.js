@@ -58,7 +58,7 @@ module.exports = (function storeWrapper() {
         path: {
           $regex: `^${collectionPath}$`,
         },
-      });
+      }).toArray();
       return result;
     },
 

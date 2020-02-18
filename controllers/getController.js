@@ -22,7 +22,7 @@ module.exports = async function getController(apiName, args, next) {
   }
 
   // even number of args = resource item request
-  const itemId = args.pop();
+  const itemId = parseInt(args.pop(), 10);
   const itemPath = args.join('/');
   const data = await store.getItem(apiName, itemId, itemPath);
   return data;
