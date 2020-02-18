@@ -22,7 +22,7 @@ main.get('*', async (req, res, next) => {
 
   try {
     const data = await getController(apiName, args, next);
-    if (!data) res.status(FAIL_STATUS).send('No data found.');
+    if (!data) res.status(FAIL_STATUS).json({ error: 'No data found.' });
     res.status(SUCCESS_STATUS).json(data);
   } catch (error) {
     next(error);

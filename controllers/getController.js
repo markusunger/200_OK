@@ -1,33 +1,29 @@
 /*
   handles all lookups from the request path and (eventually) parameters
 
-  main problem: how to determine the requested resource and how can accesss be abstract enough
-    to be store-agnostic?
-    there are a few possible actions:
-      - if 1 arg: non-nested collection in its entirety requested
-      - if 2 args: specific item from non-nested collection requested
-      - if 3 or more odd number args: nested collection in its entirety requested
-      - if 3 or more even number args: specific item from nested collection requested
-
-    examples (with args array):
-      - ['users']
-        users collection requested
-      - ['users', '45']
-        collection item with id = 45 from users collection requested
-      - ['users', '45', 'comments']
-        nested comments collection for users collection item with id = 45 requested
-      - ['users', '45', 'comments', '2']
-        specific item from nested comments collection with id = 2 for users collection
-        item with id = 45 requested
-
-    solution:
-      - 
+  Getting resources or resource items is pretty easy when using a materialized path
+  approach for the data store.
+  The Store Wrapper handles extracting the correct path, all that's left to do
+  is determine if a resource collection should be retrieved (odd number of arguments)
+  or a resource item (even number of arguments, with the last arg being the item id)
 
   TODO:
     - handle possible type conversion for args (e.g. item id's to integer)
-    - determine 
 */
 
-module.exports = function getController(apiName, args, next) {
+const store = require('../db/storeWrapper');
 
-}
+module.exports = async function getController(apiName, args, next) {
+  if (args.length % 2 !== 0) {
+    // odd number of args = resource collection request
+    const collectionPath = args.join('/');
+    const data = await store.getCollection(apiName, collectionPath);
+    return data;
+  }
+
+  // even number of args = resource item request
+  const itemId = args.pop();
+  const itemPath = args.join('/');
+  const data = await store.getItem(apiName, itemId, itemPath);
+  return data;
+};
