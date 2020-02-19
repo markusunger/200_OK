@@ -2,10 +2,9 @@
 
 /*
   TODO: - error handling
-        - find solution to make item id and path properties independent (or at least
-          impossible to change) from submitted item data
         - research about indexing and how an index for the path might improve speed
           or maybe even decrease it?
+        - find solution for integer identifiers (see section 'Problem' below)
 
   Storage Design:
     Currently, the data store is a document database (MongoDB) that supports rich
@@ -27,7 +26,16 @@
       path: '/users/45/images/23/comments',
     }
 
-    Important is the exact path match via regex to exclude any further nested resource matches
+    Important is the exact path match via regex to exclude any further nested resource matches.
+
+  Problem:
+    With all resource and sub-resource items stored in the same collection, there is seemingly
+    no simple way to use incrementing integer identifiers for each resource's items: they
+    could be stored, but a POST request needs a way to determine the next item id for each
+    resource, which would most likely involve an additional database lookup.
+    Since integer id's would be reaaaaaally awesome for usability (/users/42/comments/3 vs.
+    /users/5e4be11cb6037e82f510f8d0/comments/5e4be11cb6037e82f510f8d6), the tradeoffs might
+    be worth it.
 */
 
 const store = require('./mongo');
@@ -53,6 +61,7 @@ module.exports = (function storeWrapper() {
     // TODO: support pagination, sorting etc.
     getCollection: async function getCollection(apiName, collectionPath) {
       const collection = collectionName(apiName, collectionPath);
+
       const result = await store.db.collection(collection).find({
         path: {
           $regex: `^${collectionPath}$`,
@@ -62,10 +71,14 @@ module.exports = (function storeWrapper() {
     },
 
     // retrieves a specific item with an id from a collection
+    // since _id is Mongo's GUID, the path criterion would not be necessary
+    // to retrieve the match, but it's still checked to verify that
+    // the user does not mix up resources (performance hit?)
     getItem: async function getItem(apiName, itemId, itemPath) {
       const collection = collectionName(apiName, itemPath);
+
       const result = await store.db.collection(collection).findOne({
-        id: itemId,
+        _id: itemId,
         path: {
           $regex: `^${itemPath}$`,
         },
@@ -74,19 +87,14 @@ module.exports = (function storeWrapper() {
     },
 
     // creates a new item in an existing or new collection
-    // TODO: properly determine next item id ?
-    createItem: async function createItem(apiName, itemId, itemData, itemPath) {
+    createItem: async function createItem(apiName, itemData, itemPath) {
       const collection = collectionName(apiName, itemPath);
 
-      // create new item with id, path and all item data
-      // TODO: not just overwrite id and path properties
-      const newItem = Object.assign({}, itemData);
-      Object.assign(newItem, {
-        id: itemId,
+      const result = await store.db.collection(collection).insertOne({
         path: itemPath,
+        createdAt: new Date(),
+        data: itemData,
       });
-
-      const result = await store.db.collection(collection).insertOne(newItem);
       return result;
     },
   };

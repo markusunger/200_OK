@@ -16,9 +16,11 @@ collection.bulkWrite([
       document: {
         id: 1,
         path: 'users',
-        name: 'Schaulustiger',
-        mail: 'markus@unger.dev',
-        isAdmin: true
+        data: {
+          name: 'Schaulustiger',
+          mail: 'markus@unger.dev',
+          isAdmin: true,
+        }
       }
     }
   },

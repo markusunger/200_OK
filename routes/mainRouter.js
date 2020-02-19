@@ -6,6 +6,7 @@ const pathExtractor = require('../lib/pathExtractor');
 const validateRequest = require('../lib/validateRequest');
 
 const getController = require('../controllers/getController');
+const postController = require('../controllers/postController');
 
 const main = express.Router();
 
@@ -40,18 +41,15 @@ main.use(validateRequest);
 */
 
 main.get('*', async (req, res, next) => {
-  const SUCCESS_STATUS = 200;
-  const FAIL_STATUS = 404;
-
   const { apiName, args } = req;
 
   try {
     const data = await getController(apiName, args, next);
     if (!data) {
-      res.locals.status = FAIL_STATUS;
-      res.locals.error.push('No data found.');
+      res.locals.status = 404;
+      res.locals.errors.push('No data found.');
     } else {
-      res.locals.status = SUCCESS_STATUS;
+      res.locals.status = 200;
       res.locals.data = data;
     }
   } catch (error) {
@@ -60,11 +58,22 @@ main.get('*', async (req, res, next) => {
   next();
 });
 
-main.post('*', (req, res) => {
-  const SUCCESS_STATUS = 201;
-  const FAIL_STATUS = 400;
+main.post('*', async (req, res, next) => {
+  const { apiName, args, body } = req;
 
-
+  try {
+    const data = await postController(apiName, args, body, next);
+    if (!data) {
+      res.locals.status = 400;
+      res.locals.errors.push('Data not successfully inserted.');
+    } else {
+      res.locals.status = 201;
+      res.locals.data = data;
+    }
+  } catch (error) {
+    next(error);
+  }
+  next();
 });
 
 main.put('*', (req, res) => {
