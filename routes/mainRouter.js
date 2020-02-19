@@ -9,15 +9,35 @@ const getController = require('../controllers/getController');
 
 const main = express.Router();
 
+// request handling middleware
 main.use(apiIdentify);
 main.use(pathExtractor);
-main.use(validateRequest);
 
 // temporary middleware to show request headers
 main.use((req, res, next) => {
   devLogger(req.headers);
   next();
 });
+
+// prepare response
+main.use((req, res, next) => {
+  res.locals.errors = [];
+  res.locals.status = 200;
+  res.set({
+    'Content-Type': 'application/json',
+    Server: '200_OK API',
+  });
+  next();
+});
+
+// validates request and sends early error response if necessary
+main.use(validateRequest);
+
+/*
+   --------------------
+   HTTP method handlers
+   --------------------
+*/
 
 main.get('*', async (req, res, next) => {
   const SUCCESS_STATUS = 200;
@@ -28,13 +48,16 @@ main.get('*', async (req, res, next) => {
   try {
     const data = await getController(apiName, args, next);
     if (!data) {
-      res.status(FAIL_STATUS).json({ error: 'No data found.' });
+      res.locals.status = FAIL_STATUS;
+      res.locals.error.push('No data found.');
     } else {
-      res.status(SUCCESS_STATUS).json(data);
+      res.locals.status = SUCCESS_STATUS;
+      res.locals.data = data;
     }
   } catch (error) {
     next(error);
   }
+  next();
 });
 
 main.post('*', (req, res) => {
@@ -54,6 +77,16 @@ main.delete('*', (req, res) => {
 
 main.options('*', (req, res) => {
   res.end();
+});
+
+// send responses depending on res.locals variables
+main.use((req, res, next) => {
+  res.status(res.locals.status);
+  if (res.locals.errors.length > 0) {
+    res.json({ error: res.locals.errors });
+  } else {
+    res.json(res.locals.data);
+  }
 });
 
 module.exports = main;

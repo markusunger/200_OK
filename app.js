@@ -25,7 +25,7 @@ app.use('/', mainRouter);
 // general error handler
 // TBD: how any non-500 error is handled
 app.use((err, req, res, next) => {
-  // only print strace in dev enviroment
+  // only print stack trace in dev enviroment
   if (env === 'development') devLogger(err, 'error');
   // TODO: maybe receive error codes through error object?
   if (res.statusCode === 200) res.status(500);
