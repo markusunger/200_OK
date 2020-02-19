@@ -1,5 +1,5 @@
 /*
-  handles all lookups from the request path and (eventually) parameters
+  handles all lookups from the request path and (eventually) query parameters
 
   Getting resources or resource items is pretty easy when using a materialized path
   approach for the data store.

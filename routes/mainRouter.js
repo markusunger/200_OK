@@ -13,12 +13,17 @@ main.use(apiIdentify);
 main.use(pathExtractor);
 main.use(validateRequest);
 
+// temporary middleware to show request headers
+main.use((req, res, next) => {
+  devLogger(req.headers);
+  next();
+});
+
 main.get('*', async (req, res, next) => {
   const SUCCESS_STATUS = 200;
   const FAIL_STATUS = 404;
 
-  const { apiName } = req;
-  const { args } = req;
+  const { apiName, args } = req;
 
   try {
     const data = await getController(apiName, args, next);
@@ -33,7 +38,10 @@ main.get('*', async (req, res, next) => {
 });
 
 main.post('*', (req, res) => {
-  res.end();
+  const SUCCESS_STATUS = 201;
+  const FAIL_STATUS = 400;
+
+
 });
 
 main.put('*', (req, res) => {

@@ -17,6 +17,8 @@ app.disable('x-powered-by');
 // logging middleware for dev environment
 if (env === 'development') app.use(morgan('dev'));
 
+app.use(express.json());
+
 // catch-all route for all requests
 app.use('/', mainRouter);
 
