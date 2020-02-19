@@ -9,21 +9,34 @@
 
   TODO:
     - handle possible type conversion for args (e.g. item id's to integer)
+    - handle data retrieval errors? call next if e.g. database is down
 */
 
 const store = require('../db/storeWrapper');
 
 module.exports = async function getController(apiName, args, next) {
+  let data;
+
   if (args.length % 2 !== 0) {
     // odd number of args = resource collection request
     const collectionPath = args.join('/');
-    const data = await store.getCollection(apiName, collectionPath);
-    return data;
+    try {
+      data = await store.getCollection(apiName, collectionPath);
+    } catch (error) {
+      next(error);
+    }
   }
 
-  // even number of args = resource item request
-  const itemId = parseInt(args.pop(), 10);
-  const itemPath = args.join('/');
-  const data = await store.getItem(apiName, itemId, itemPath);
+  if (args.length % 2 === 0) {
+    // even number of args = resource item request
+    const itemId = parseInt(args.pop(), 10);
+    const itemPath = args.join('/');
+    try {
+      data = await store.getItem(apiName, itemId, itemPath);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   return data;
 };

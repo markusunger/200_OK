@@ -31,7 +31,6 @@
 */
 
 const store = require('./mongo');
-const devLogger = require('../lib/devLogger');
 
 module.exports = (function storeWrapper() {
   function collectionName(apiName, collectionPath) {
