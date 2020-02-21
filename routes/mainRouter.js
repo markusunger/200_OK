@@ -14,9 +14,9 @@ const main = express.Router();
 main.use(apiIdentify);
 main.use(pathExtractor);
 
-// temporary middleware to show request headers
+// temporary middleware for debugging output
 main.use((req, res, next) => {
-  devLogger(req.headers);
+  devLogger(req.args);
   next();
 });
 
@@ -47,7 +47,7 @@ main.get('*', async (req, res, next) => {
     const data = await getController(apiName, args, next);
     if (!data) {
       res.locals.status = 404;
-      res.locals.errors.push('No data found.');
+      res.locals.errors.push(`No data found for ${args.join('/')}.`);
     } else {
       res.locals.status = 200;
       res.locals.data = data;

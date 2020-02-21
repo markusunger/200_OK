@@ -1,6 +1,6 @@
 /*
   returns an object that holds a reference to the database object (db)
-  as well as an init method that makes the actual connection asynchronously
+  as well as an init method that creates the actual connection asynchronously
 */
 
 const { MongoClient } = require('mongodb');
@@ -24,6 +24,10 @@ const Mongo = {
       this.db = null;
     }
     return this;
+  },
+
+  shutdown: async function shutdown() {
+    await this.client.close(true);
   },
 };
 

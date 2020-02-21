@@ -29,8 +29,9 @@ module.exports = async function getController(apiName, args, next) {
 
   if (args.length % 2 === 0) {
     // even number of args = resource item request
-    const itemId = parseInt(args.pop(), 10);
-    const itemPath = args.join('/');
+    let itemId = args[args.length - 1];
+    if (/^\d*$/.test(itemId)) itemId = parseInt(itemId, 10);
+    const itemPath = args.slice(0, args.length - 1).join('/');
     try {
       data = await store.getItem(apiName, itemId, itemPath);
     } catch (error) {

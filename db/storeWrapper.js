@@ -38,6 +38,7 @@
     be worth it.
 */
 
+const { ObjectID } = require('mongodb');
 const store = require('./mongo');
 
 module.exports = (function storeWrapper() {
@@ -77,12 +78,15 @@ module.exports = (function storeWrapper() {
     getItem: async function getItem(apiName, itemId, itemPath) {
       const collection = collectionName(apiName, itemPath);
 
-      const result = await store.db.collection(collection).findOne({
-        _id: itemId,
-        path: {
-          $regex: `^${itemPath}$`,
-        },
-      });
+      const result = await store.db.collection(collection)
+        .findOne({
+          _id: new ObjectID(itemId),
+          path: {
+            $regex: `^${itemPath}$`,
+          },
+        }, {
+          projection: { data: 1 },
+        });
       return result;
     },
 

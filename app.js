@@ -5,7 +5,7 @@ const config = require('./lib/config');
 const devLogger = require('./lib/devLogger');
 const mainRouter = require('./routes/mainRouter');
 
-require('./db/mongo');
+const store = require('./db/mongo');
 
 const env = process.env.NODE_ENV || 'development';
 
@@ -23,14 +23,20 @@ app.use(express.json());
 app.use('/', mainRouter);
 
 // general error handler
-// TBD: how any non-500 error is handled
 app.use((err, req, res, next) => {
   // only print stack trace in dev enviroment
   if (env === 'development') devLogger(err, 'error');
-  // TODO: maybe receive error codes through error object?
   if (res.statusCode === 200) res.status(500);
-  const error = err.message || 'Internal server error.';
+  const error = env === 'development' ? err.message : 'Internal server error.';
   res.json({ error });
 });
 
-app.listen(config.nodePort, () => devLogger(`Server started on ${config.nodePort}.`));
+// shut down gracefully on any uncaught runtime exceptions
+process.on('uncaughtException', async (err) => {
+  devLogger(err);
+  await store.client.close();
+  process.exit(1);
+});
+
+const port = config.nodePort || 3000;
+app.listen(port, () => devLogger(`Server started on ${port}.`));
