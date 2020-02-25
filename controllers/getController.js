@@ -21,7 +21,7 @@ module.exports = async function getController(apiName, args, next) {
     // odd number of args = resource collection request
     const collectionPath = args.join('/');
     try {
-      data = await store.getCollection(apiName, collectionPath);
+      data = await store.getCollection(apiName, collectionPath, next);
     } catch (error) {
       next(error);
     }
@@ -29,11 +29,10 @@ module.exports = async function getController(apiName, args, next) {
 
   if (args.length % 2 === 0) {
     // even number of args = resource item request
-    let itemId = args[args.length - 1];
-    if (/^\d*$/.test(itemId)) itemId = parseInt(itemId, 10);
+    const itemId = parseInt(args[args.length - 1], 10);
     const itemPath = args.slice(0, args.length - 1).join('/');
     try {
-      data = await store.getItem(apiName, itemId, itemPath);
+      data = await store.getItem(apiName, itemId, itemPath, next);
     } catch (error) {
       next(error);
     }

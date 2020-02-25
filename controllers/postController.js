@@ -10,20 +10,27 @@ const devLogger = require('../lib/devLogger');
 const store = require('../db/storeWrapper');
 
 module.exports = async function postController(apiName, args, itemData, next) {
+  let itemId;
   let response;
   const itemPath = args.join('/');
 
   try {
-    response = await store.createItem(apiName, itemData, itemPath);
+    itemId = await store.getNextHighestId(apiName, itemPath, next);
+  } catch (error) {
+    next(error);
+  }
+
+  if (!itemId) next(new Error('Unable to retrieve new item id.'));
+
+  try {
+    response = await store.createItem(apiName, itemId, itemData, itemPath, next);
   } catch (error) {
     next(error);
   }
 
   if (!response.insertedCount || response.insertedCount === 0) return null;
   if (response.ops && Array.isArray(response.ops)) {
-    const { data } = response.ops[0];
-    data.id = response.ops[0]._id;
-    return data;
+    return response.ops[0].data;
   }
   devLogger(new Error('Response handling in postController fell through!'));
   return null;
