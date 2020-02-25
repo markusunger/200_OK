@@ -131,9 +131,33 @@ module.exports = (function storeWrapper() {
         next(error);
       }
 
-      console.log(result);
-
       return (result && result.deletedCount > 0) ? true : null;
+    },
+
+    updateItem: async function updateItem(apiName, itemId, itemData, itemPath, next) {
+      let result;
+
+      // flatten itemData into object with 'data.<x>' keys to properly be able to update
+      // also prevent id from being overwritten by client
+      const insertData = Object.entries(itemData).reduce((obj, [key, value]) => {
+        if (key !== 'id') Object.defineProperty(obj, `data.${key}`, { value, enumerable: true });
+        return obj;
+      }, {});
+
+      console.log(itemData);
+
+      try {
+        result = await store.db.collection(apiName).updateOne({
+          'data.id': itemId,
+          path: itemPath,
+        }, {
+          $set: insertData,
+        });
+      } catch (error) {
+        next(error);
+      }
+
+      return (result && result.modifiedCount > 0) ? true : null;
     },
   };
 }());

@@ -8,6 +8,7 @@ const validateRequest = require('../lib/validateRequest');
 const getController = require('../controllers/getController');
 const postController = require('../controllers/postController');
 const deleteController = require('../controllers/deleteController');
+const putController = require('../controllers/putController');
 
 const main = express.Router();
 
@@ -17,7 +18,7 @@ main.use(pathExtractor);
 
 // temporary middleware for debugging output
 main.use((req, res, next) => {
-  devLogger(req.args);
+  // debug info here
   next();
 });
 
@@ -66,7 +67,7 @@ main.post('*', async (req, res, next) => {
     const data = await postController(apiName, args, body, next);
     if (!data) {
       res.locals.status = 400;
-      res.locals.errors.push('Data not successfully inserted.');
+      res.locals.errors.push('Data could not be inserted.');
     } else {
       res.locals.status = 201;
       res.locals.data = data;
@@ -77,8 +78,22 @@ main.post('*', async (req, res, next) => {
   next();
 });
 
-main.put('*', (req, res) => {
-  res.end();
+main.put('*', async (req, res, next) => {
+  const { apiName, args, body } = req;
+
+  try {
+    const data = await putController(apiName, args, body, next);
+    if (!data) {
+      res.locals.status = 400;
+      res.locals.errors.push('Data could not be updated.');
+    } else {
+      res.locals.status = 204;
+      res.locals.data = {};
+    }
+  } catch (error) {
+    next(error);
+  }
+  next();
 });
 
 main.delete('*', async (req, res, next) => {
