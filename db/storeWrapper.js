@@ -123,13 +123,15 @@ module.exports = (function storeWrapper() {
       let result;
 
       try {
-        result = store.db.collection(apiName).deleteOne({
+        result = await store.db.collection(apiName).deleteOne({
           'data.id': itemId,
           path: itemPath,
         });
       } catch (error) {
         next(error);
       }
+
+      console.log(result);
 
       return (result && result.deletedCount > 0) ? true : null;
     },

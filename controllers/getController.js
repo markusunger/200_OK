@@ -8,8 +8,7 @@
   or a resource item (even number of arguments, with the last arg being the item id)
 
   TODO:
-    - handle possible type conversion for args (e.g. item id's to integer)
-    - handle data retrieval errors? call next if e.g. database is down
+    - properly handle possible type conversion for args (e.g. item id's to integer)
 */
 
 const store = require('../db/storeWrapper');

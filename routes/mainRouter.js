@@ -96,6 +96,7 @@ main.delete('*', async (req, res, next) => {
   } catch (error) {
     next(error);
   }
+  next();
 });
 
 main.options('*', (req, res) => {
