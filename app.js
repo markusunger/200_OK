@@ -24,7 +24,7 @@ app.use('/', mainRouter);
 
 // general error handler
 app.use((err, req, res, next) => {
-  // only print stack trace in dev enviroment
+  // only print stack trace and return detailed error message in dev enviroment
   if (env === 'development') devLogger(err, 'error');
   if (res.statusCode === 200) res.status(500);
   const error = env === 'development' ? err.message : 'Internal server error.';

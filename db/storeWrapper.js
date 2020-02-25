@@ -118,5 +118,20 @@ module.exports = (function storeWrapper() {
       }
       return result;
     },
+
+    deleteItem: async function deleteItem(apiName, itemId, itemPath, next) {
+      let result;
+
+      try {
+        result = store.db.collection(apiName).deleteOne({
+          'data.id': itemId,
+          path: itemPath,
+        });
+      } catch (error) {
+        next(error);
+      }
+
+      return (result && result.deletedCount > 0) ? true : null;
+    },
   };
 }());

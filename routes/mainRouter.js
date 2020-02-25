@@ -7,6 +7,7 @@ const validateRequest = require('../lib/validateRequest');
 
 const getController = require('../controllers/getController');
 const postController = require('../controllers/postController');
+const deleteController = require('../controllers/deleteController');
 
 const main = express.Router();
 
@@ -80,8 +81,21 @@ main.put('*', (req, res) => {
   res.end();
 });
 
-main.delete('*', (req, res) => {
-  res.end();
+main.delete('*', async (req, res, next) => {
+  const { apiName, args } = req;
+
+  try {
+    const data = await deleteController(apiName, args, next);
+    if (!data) {
+      res.locals.status = 404;
+      res.locals.errors.push('Data not successfully deleted (because it likely isn\'t there).');
+    } else {
+      res.locals.status = 204;
+      res.locals.data = {};
+    }
+  } catch (error) {
+    next(error);
+  }
 });
 
 main.options('*', (req, res) => {
