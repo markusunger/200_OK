@@ -9,8 +9,24 @@ const devLogger = require('../lib/devLogger');
 
 const Mongo = {
   init: async function init() {
+    let host;
+    let port;
+    let db;
+
+    switch (process.env.NODE_ENV) {
+      case 'test':
+        host = config.mongoHostTest;
+        port = config.mongoPortTest;
+        db = config.mongoDbTest;
+        break;
+      default:
+        host = config.mongoHost;
+        port = config.mongoPort;
+        db = config.mongoDb;
+    }
+
     this.client = new MongoClient(
-      `mongodb://${config.mongoHost}:${config.mongoPort}/${config.mongoDb}`,
+      `mongodb://${host}:${port}/${db}`,
       {
         useNewUrlParser: true,
         useUnifiedTopology: true,
