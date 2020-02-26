@@ -10,6 +10,15 @@ const seed = require('./seeds/mongo.seed');
 beforeAll(seed);
 
 describe('GET endpoint tests', () => {
+  it('should return a 400 if a non-existing API is requested', async (done) => {
+    const response = await request(app)
+      .get('/users')
+      .set('Host', 'fnord.200ok.app');
+    expect(response.status).toBe(400);
+    expect(response.body.error[0]).toBe('API with the name \'fnord\' does not exist.');
+    done();
+  });
+
   it('should return a 400 if the root path is requested', async (done) => {
     const response = await request(app)
       .get('/')
@@ -47,7 +56,7 @@ describe('GET endpoint tests', () => {
     done();
   });
 
-  it('should return a nested resource item', async(done) => {
+  it('should return a nested resource item', async (done) => {
     const response = await request(app)
       .get('/users/1/comments/1')
       .set('Host', 'envious-tesla.200ok.app');
@@ -57,6 +66,7 @@ describe('GET endpoint tests', () => {
   });
 });
 
-afterAll(async () => {
+afterAll(async (done) => {
   await mongo.shutdown();
-})
+  done();
+});

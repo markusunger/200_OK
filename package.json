@@ -8,7 +8,7 @@
   "license": "GPL-3.0-or-later",
   "scripts": {
     "dev": "nodemon ./bin/www",
-    "test": "NODE_ENV=test jest --testTimeout=10000"
+    "test": "NODE_ENV=test jest --detectOpenHandles --forceExit  --testTimeout=10000"
   },
   "jest": {
     "testEnvironment": "node",
