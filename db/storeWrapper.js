@@ -37,7 +37,8 @@ module.exports = (function storeWrapper() {
       } catch (error) {
         next(error);
       }
-      return result || null;
+
+      return (result && result.length > 0) ? result : null;
     },
 
     // retrieves a specific item with an id from a collection
@@ -137,14 +138,12 @@ module.exports = (function storeWrapper() {
     updateItem: async function updateItem(apiName, itemId, itemData, itemPath, next) {
       let result;
 
-      // flatten itemData into object with 'data.<x>' keys to properly be able to update
+      // flatten itemData into object with 'data.<x>' keys to be able to properly $set,
       // also prevent id from being overwritten by client
       const insertData = Object.entries(itemData).reduce((obj, [key, value]) => {
         if (key !== 'id') Object.defineProperty(obj, `data.${key}`, { value, enumerable: true });
         return obj;
       }, {});
-
-      console.log(itemData);
 
       try {
         result = await store.db.collection(apiName).updateOne({

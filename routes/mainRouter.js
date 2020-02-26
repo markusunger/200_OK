@@ -1,6 +1,5 @@
 const express = require('express');
 
-const devLogger = require('../lib/devLogger');
 const apiIdentify = require('../lib/apiIdentify');
 const pathExtractor = require('../lib/pathExtractor');
 const validateRequest = require('../lib/validateRequest');
@@ -33,7 +32,7 @@ main.use((req, res, next) => {
   next();
 });
 
-// validates request and sends early error response if necessary
+// validates request and sends early error response if invalid request
 main.use(validateRequest);
 
 /*
@@ -85,7 +84,7 @@ main.put('*', async (req, res, next) => {
     const data = await putController(apiName, args, body, next);
     if (!data) {
       res.locals.status = 400;
-      res.locals.errors.push('Data could not be updated.');
+      res.locals.errors.push('Data could not be updated (most likely because the item doesn\'t exist).');
     } else {
       res.locals.status = 204;
       res.locals.data = {};
@@ -103,7 +102,7 @@ main.delete('*', async (req, res, next) => {
     const data = await deleteController(apiName, args, next);
     if (!data) {
       res.locals.status = 404;
-      res.locals.errors.push('Data not successfully deleted (because it likely isn\'t there).');
+      res.locals.errors.push('Data could not be deleted (because it likely isn\'t there).');
     } else {
       res.locals.status = 204;
       res.locals.data = {};

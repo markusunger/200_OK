@@ -1,11 +1,12 @@
 const express = require('express');
 const morgan = require('morgan');
 
-const config = require('./lib/config');
 const devLogger = require('./lib/devLogger');
 const mainRouter = require('./routes/mainRouter');
 
 const store = require('./db/mongo');
+
+store.init();
 
 const env = process.env.NODE_ENV || 'development';
 
@@ -34,9 +35,16 @@ app.use((err, req, res, next) => {
 // shut down gracefully on any uncaught runtime exceptions
 process.on('uncaughtException', async (err) => {
   devLogger(err);
-  await store.client.close();
+  await store.shutdown();
   process.exit(1);
 });
 
-const port = config.nodePort || 3000;
-app.listen(port, () => devLogger(`Server started on ${port}.`));
+// for now, also exit on any unhandled promise rejections, might need to
+// research this a bit more
+process.on('unhandledRejection', async (err) => {
+  devLogger(err);
+  await store.shutdown();
+  process.exit(1);
+});
+
+module.exports = app;

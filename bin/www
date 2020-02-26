@@ -1,0 +1,10 @@
+#!/usr/bin/node
+
+const http = require('http');
+const app = require('../app');
+const config = require('../lib/config');
+
+const port = config.nodePort || 3000;
+
+const server = http.createServer(app);
+server.listen(port, () => console.log(`Backend server started on port ${port}.`));
