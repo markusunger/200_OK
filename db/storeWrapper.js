@@ -38,7 +38,10 @@ module.exports = (function storeWrapper() {
         next(error);
       }
 
-      return (result && result.length > 0) ? result : null;
+      // TODO: consider switching to some prerequisites for requesting an empty resource collection
+      // it should work for empty collections (e.g. todo list with no items), but should every
+      // collection endpoint really return an empty array and a 200 if no items are found for it?
+      return result || null;
     },
 
     // retrieves a specific item with an id from a collection

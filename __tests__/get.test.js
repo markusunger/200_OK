@@ -1,7 +1,5 @@
 /* eslint-disable */
 
-// process.env.NODE_ENV = 'test';
-
 const request = require('supertest');
 const mongo = require('../db/mongo');
 const app = require('../app');
