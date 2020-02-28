@@ -2,7 +2,9 @@ const express = require('express');
 const morgan = require('morgan');
 
 const devLogger = require('./lib/devLogger');
-const mainRouter = require('./routes/mainRouter');
+const subdomain = require('./lib/subdomain');
+const internalRouter = require('./routes/internalRouter');
+const externalRouter = require('./routes/externalRouter');
 
 const store = require('./db/mongo');
 
@@ -20,8 +22,11 @@ if (env === 'development') app.use(morgan('dev'));
 
 app.use(express.json());
 
-// catch-all route for all requests
-app.use('/', mainRouter);
+// invoke router for all internal API requests
+app.use('/', subdomain(false, internalRouter));
+
+// invoke router for all external API requests
+app.use('/', subdomain(true, externalRouter));
 
 // general error handler
 app.use((err, req, res, next) => {
