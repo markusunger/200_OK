@@ -1,18 +1,35 @@
+const crypto = require('crypto');
+
 const store = require('../db/mongo');
+const words = require('../lib/words');
 
 module.exports = (function metaService() {
-  function createApiKey() {
+  function createApiName() {
+    // TODO: prevent duplicates
+    const adjective = words.adjectives[Math.floor(Math.random() * words.adjectives.length)];
+    const name = words.names[Math.floor(Math.random() * words.names.length)];
+    return `${adjective}-${name}`;
+  }
 
+  function createApiKey() {
+    // this does not need to be as secure as a proper hash,
+    // so a simple crypto randomization will suffice
+    const key = crypto.randomBytes(12)
+      .toString('hex')
+      .toUpperCase()
+      .match(/(.{4})/g)
+      .join('-');
+    return key;
   }
 
   return {
     // creates a new API config
-    createApi: async function createApi(name) {
+    createApi: async function createApi() {
       let result;
 
       try {
         result = await store.db.collection('config').insertOne({
-          apiName: name,
+          apiName: createApiName(),
           createdAt: new Date(),
           apiKey: createApiKey(),
         });
