@@ -14,13 +14,13 @@
 const store = require('../services/schemaless');
 
 module.exports = async function getController(apiName, args, next) {
-  let data;
+  let result;
 
   if (args.length % 2 !== 0) {
     // odd number of args = resource collection request
     const collectionPath = args.join('/');
     try {
-      data = await store.getCollection(apiName, collectionPath, next);
+      result = await store.getCollection(apiName, collectionPath, next);
     } catch (error) {
       next(error);
     }
@@ -31,11 +31,11 @@ module.exports = async function getController(apiName, args, next) {
     const itemId = parseInt(args[args.length - 1], 10);
     const itemPath = args.slice(0, args.length - 1).join('/');
     try {
-      data = await store.getItem(apiName, itemId, itemPath, next);
+      result = await store.getItem(apiName, itemId, itemPath, next);
     } catch (error) {
       next(error);
     }
   }
 
-  return data;
+  return result;
 };

@@ -11,7 +11,7 @@ const store = require('../services/schemaless');
 
 module.exports = async function postController(apiName, args, itemData, next) {
   let itemId;
-  let response;
+  let result;
   const itemPath = args.join('/');
 
   try {
@@ -23,14 +23,14 @@ module.exports = async function postController(apiName, args, itemData, next) {
   if (!itemId) next(new Error('Unable to retrieve new item id.'));
 
   try {
-    response = await store.createItem(apiName, itemId, itemData, itemPath, next);
+    result = await store.createItem(apiName, itemId, itemData, itemPath, next);
   } catch (error) {
     next(error);
   }
 
-  if (!response.insertedCount || response.insertedCount === 0) return null;
-  if (response.ops && Array.isArray(response.ops)) {
-    return response.ops[0].data;
+  if (!result.insertedCount || result.insertedCount === 0) return null;
+  if (result.ops && Array.isArray(result.ops)) {
+    return result.ops[0].data;
   }
   devLogger(new Error('Response handling in postController fell through!'));
   return null;
