@@ -5,6 +5,7 @@ const Response = require('../lib/response');
 const apiLookup = require('../lib/apiLookup');
 const pathExtractor = require('../lib/pathExtractor');
 const validateRequest = require('../lib/validateRequest');
+const cors = require('../lib/cors');
 
 const getController = require('../controllers/getController');
 const postController = require('../controllers/postController');
@@ -33,6 +34,9 @@ main.use((req, res, next) => {
 
 // validates request and sends early error response if invalid request
 main.use(validateRequest);
+
+// CORS support and general OPTIONS request responses
+main.use(cors());
 
 /*
    --------------------
@@ -114,23 +118,19 @@ main.delete('*', async (req, res, next) => {
   next();
 });
 
-main.options('*', (req, res) => {
-  res.end();
-});
-
 // send responses depending on response variables
 main.use((req, res, next) => {
   const { response } = res.locals;
 
+  res.set(response.getHeaders());
+
   res.status(response.status);
   if (response.hasErrors()) {
     res.json({ error: response.errors });
+  } else if (response.body) {
+    res.json(response.body);
   } else {
-    if (response.body) {
-      res.json(response.body);
-    } else {
-      res.end();
-    }
+    res.end();
   }
 });
 
