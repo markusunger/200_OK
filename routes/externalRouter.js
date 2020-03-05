@@ -3,10 +3,10 @@ const { RateLimiterMemory } = require('rate-limiter-flexible');
 
 const Response = require('../lib/response');
 
-const apiLookup = require('../lib/apiLookup');
-const pathExtractor = require('../lib/pathExtractor');
-const validateRequest = require('../lib/validateRequest');
-const cors = require('../lib/cors');
+const apiLookup = require('../middleware/apiLookup');
+const pathExtractor = require('../middleware/pathExtractor');
+const validateRequest = require('../middleware/validateRequest');
+const cors = require('../middleware/cors');
 
 const getController = require('../controllers/getController');
 const postController = require('../controllers/postController');

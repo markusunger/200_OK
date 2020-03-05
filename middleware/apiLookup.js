@@ -1,4 +1,4 @@
-const store = require('../db/storeWrapper');
+const store = require('../services/metadata');
 
 module.exports = async function apiLookup(req, res, next) {
   const { apiName } = req;

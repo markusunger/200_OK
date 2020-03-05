@@ -2,7 +2,7 @@ const express = require('express');
 const morgan = require('morgan');
 
 const devLogger = require('./lib/devLogger');
-const subdomain = require('./lib/subdomain');
+const subdomain = require('./middleware/subdomain');
 const internalRouter = require('./routes/internalRouter');
 const externalRouter = require('./routes/externalRouter');
 

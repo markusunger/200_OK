@@ -4,7 +4,7 @@
   needs to check and remove any id field to prevent overwriting it
 */
 
-const store = require('../db/storeWrapper');
+const store = require('../services/schemaless');
 
 module.exports = async function putController(apiName, args, itemData, next) {
   let result;

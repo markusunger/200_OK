@@ -11,7 +11,7 @@
     - properly handle possible type conversion for args (e.g. item id's to integer)
 */
 
-const store = require('../db/storeWrapper');
+const store = require('../services/schemaless');
 
 module.exports = async function getController(apiName, args, next) {
   let data;

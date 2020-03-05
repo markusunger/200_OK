@@ -2,7 +2,7 @@
   handles the deletion of a specific resource item
 */
 
-const store = require('../db/storeWrapper');
+const store = require('../services/schemaless');
 
 module.exports = async function deleteController(apiName, args, next) {
   let result;

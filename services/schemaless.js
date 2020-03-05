@@ -1,26 +1,10 @@
-// wraps the database and provides an object with all necessary CRUD operations
+// wraps the database and provides an object with all necessary CRUD operations for the schemaless
+// "intelligent" mode
 
-const store = require('./mongo');
+const store = require('../db/mongo');
 
-module.exports = (function storeWrapper() {
-  // TODO: init db connection as early as possible, so maybe not here
-  store.init();
-
+module.exports = (function schemalessService() {
   return {
-    // retrieves metadata about the specified API
-    getApiInfo: async function getApiInfo(apiName, next) {
-      let result;
-
-      try {
-        result = await store.db.collection('config').findOne({
-          subdomain: apiName,
-        });
-      } catch (error) {
-        next(error);
-      }
-      return result;
-    },
-
     // retrieves a complete collection
     // TODO: support pagination, sorting etc.
     getCollection: async function getCollection(apiName, collectionPath, next) {

@@ -7,7 +7,7 @@
 */
 
 const devLogger = require('../lib/devLogger');
-const store = require('../db/storeWrapper');
+const store = require('../services/schemaless');
 
 module.exports = async function postController(apiName, args, itemData, next) {
   let itemId;
