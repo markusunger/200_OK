@@ -1,4 +1,5 @@
 const express = require('express');
+const { RateLimiterMemory } = require('rate-limiter-flexible');
 
 const Response = require('../lib/response');
 
@@ -16,10 +17,32 @@ const env = process.env.NODE_ENV || 'development';
 
 const main = express.Router();
 
+// set up rate limiter for external API requests
+// with 10 requests allowed per second
+const rateLimiter = new RateLimiterMemory({
+  points: 10,
+  duration: 1,
+});
+
 // set up custom response objects
 main.use((req, res, next) => {
   res.locals.response = new Response();
   next();
+});
+
+// rate limiting first to send 429 without any database lookups
+// when too many requests were sent
+main.use(async (req, res, next) => {
+  const { hostname } = req;
+  const { response } = res.locals;
+  try {
+    await rateLimiter.consume(hostname, 1);
+    next();
+  } catch (err) {
+    // TODO: does this still need CORS headers to be successfully forwarded by a browser?
+    response.status = 429;
+    next(new Error('Too many requests. Better slow down.'));
+  }
 });
 
 // request handling middleware
