@@ -1,6 +1,8 @@
 const express = require('express');
 
-const apiIdentify = require('../lib/apiIdentify');
+const Response = require('../lib/response');
+
+const apiLookup = require('../lib/apiLookup');
 const pathExtractor = require('../lib/pathExtractor');
 const validateRequest = require('../lib/validateRequest');
 
@@ -9,26 +11,23 @@ const postController = require('../controllers/postController');
 const deleteController = require('../controllers/deleteController');
 const putController = require('../controllers/putController');
 
+const env = process.env.NODE_ENV || 'development';
+
 const main = express.Router();
 
-// request handling middleware
-main.use(apiIdentify);
-main.use(pathExtractor);
-
-// temporary middleware for debugging output
+// set up custom response objects
 main.use((req, res, next) => {
-  // debug info here
+  res.locals.response = new Response();
   next();
 });
 
-// prepare response
+// request handling middleware
+main.use(apiLookup);
+main.use(pathExtractor);
+
+// temporary middleware for debugging
 main.use((req, res, next) => {
-  res.locals.errors = [];
-  res.locals.status = 200;
-  res.set({
-    'Content-Type': 'application/json',
-    Server: '200_OK API',
-  });
+  // debug stuff here
   next();
 });
 
@@ -43,15 +42,16 @@ main.use(validateRequest);
 
 main.get('*', async (req, res, next) => {
   const { apiName, args } = req;
+  const { response } = res.locals;
 
   try {
     const data = await getController(apiName, args, next);
     if (!data) {
-      res.locals.status = 404;
-      res.locals.errors.push(`No data found for ${args.join('/')}.`);
+      response.status = 404;
+      response.addError(`No data found for ${args.join('/')}.`);
     } else {
-      res.locals.status = 200;
-      res.locals.data = data;
+      response.status = 200;
+      response.body = data;
     }
   } catch (error) {
     next(error);
@@ -61,15 +61,16 @@ main.get('*', async (req, res, next) => {
 
 main.post('*', async (req, res, next) => {
   const { apiName, args, body } = req;
+  const { response } = res.locals;
 
   try {
     const data = await postController(apiName, args, body, next);
     if (!data) {
-      res.locals.status = 400;
-      res.locals.errors.push('Data could not be inserted.');
+      response.status = 400;
+      response.addError('Data could not be inserted.');
     } else {
-      res.locals.status = 201;
-      res.locals.data = data;
+      response.status = 201;
+      response.body = data;
     }
   } catch (error) {
     next(error);
@@ -79,15 +80,15 @@ main.post('*', async (req, res, next) => {
 
 main.put('*', async (req, res, next) => {
   const { apiName, args, body } = req;
+  const { response } = res.locals;
 
   try {
     const data = await putController(apiName, args, body, next);
     if (!data) {
-      res.locals.status = 400;
-      res.locals.errors.push('Data could not be updated (most likely because the item doesn\'t exist).');
+      response.status = 400;
+      response.addError('Data could not be updated (most likely because the item doesn\'t exist).');
     } else {
-      res.locals.status = 204;
-      res.locals.data = {};
+      response.status = 204;
     }
   } catch (error) {
     next(error);
@@ -97,15 +98,15 @@ main.put('*', async (req, res, next) => {
 
 main.delete('*', async (req, res, next) => {
   const { apiName, args } = req;
+  const { response } = res.locals;
 
   try {
     const data = await deleteController(apiName, args, next);
     if (!data) {
-      res.locals.status = 404;
-      res.locals.errors.push('Data could not be deleted (because it likely isn\'t there).');
+      response.status = 404;
+      response.addError('Data could not be deleted (because it likely isn\'t there).');
     } else {
-      res.locals.status = 204;
-      res.locals.data = {};
+      response.status = 204;
     }
   } catch (error) {
     next(error);
@@ -117,14 +118,32 @@ main.options('*', (req, res) => {
   res.end();
 });
 
-// send responses depending on res.locals variables
+// send responses depending on response variables
 main.use((req, res, next) => {
-  res.status(res.locals.status);
-  if (res.locals.errors.length > 0) {
-    res.json({ error: res.locals.errors });
+  const { response } = res.locals;
+
+  res.status(response.status);
+  if (response.hasErrors()) {
+    res.json({ error: response.errors });
   } else {
-    res.json(res.locals.data);
+    if (response.body) {
+      res.json(response.body);
+    } else {
+      res.end();
+    }
   }
+});
+
+// general error handler
+main.use((err, req, res, next) => {
+  const { response } = res.locals;
+
+  // only print stack trace and return detailed error message in dev enviroment
+  if (env === 'development') console.log(err);
+  if (response.status === 200) response.status = 500;
+  const error = process.env !== 'production' ? err.message : 'Internal server error.';
+  response.addError(error);
+  res.status(response.status).json({ error: response.errors });
 });
 
 module.exports = main;
