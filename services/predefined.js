@@ -8,12 +8,13 @@ module.exports = (function predefinedService() {
       try {
         result = await store.db.collection(`pre:${apiName}`).findOne({
           apiName,
+          path,
         });
       } catch (error) {
-        next(error);
+        throw (error);
       }
 
-      return result;
+      return result ? result.data : null;
     },
   };
 }());

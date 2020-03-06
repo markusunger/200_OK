@@ -13,6 +13,41 @@ module.exports = function validateRequest(req, res, next) {
     response.addError('no path specified');
   }
 
+  /* check for valid resource names
+     must be only alphanumeric characters ([a-zA-Z0-9])
+       or hyphen (-), underscore (_)
+     maximum length 64 characters
+     must start with a letter
+     at maximum four nested resources are allowed
+  */
+  const resources = req.args.filter((segment, idx) => idx % 2 === 0);
+
+  if (resources.length > 4) {
+    response.status = 400;
+    response.addError('A maximum number of four nested resources is allowed.');
+  }
+
+  if (resources.some(resource => resource.length > 64)) {
+    response.status = 400;
+    response.addError('Resource names must not be longer than 64 characters.');
+  }
+
+  const validCharacters = /^[a-zA-Z][a-zA-Z0-9-_]*$/;
+  if (!resources.every(resource => validCharacters.test(resource))) {
+    response.status = 400;
+    response.addError('A resource name can only contain alphanumeric characters, hyphens and underscores and must start with a letter.');
+  }
+
+  /*
+  resource ids must be numeric (since they are server-generated as incrementing integers)
+  */
+  const ids = req.args.filter((segment, idx) => idx % 2 !== 0);
+
+  if (!ids.every(id => /^[0-9]*$/.test(id))) {
+    response.status = 400;
+    response.addError('A resource item id can only contain numeric characters.');
+  }
+
   /* check for valid POST requests
      TODO:
       - handle encoding errors or is that already done by express.json()?
