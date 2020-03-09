@@ -20,7 +20,7 @@ module.exports = function validateRequest(req, res, next) {
      must start with a letter
      at maximum four nested resources are allowed
   */
-  const resources = req.args.filter((segment, idx) => idx % 2 === 0);
+  const resources = req.args ? req.args.filter((segment, idx) => idx % 2 === 0) : [];
 
   if (resources.length > 4) {
     response.status = 400;
@@ -41,7 +41,7 @@ module.exports = function validateRequest(req, res, next) {
   /*
   resource ids must be numeric (since they are server-generated as incrementing integers)
   */
-  const ids = req.args.filter((segment, idx) => idx % 2 !== 0);
+  const ids = req.args ? req.args.filter((segment, idx) => idx % 2 !== 0) : [];
 
   if (!ids.every(id => /^[0-9]*$/.test(id))) {
     response.status = 400;

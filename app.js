@@ -2,9 +2,7 @@ const express = require('express');
 const morgan = require('morgan');
 
 const devLogger = require('./lib/devLogger');
-const subdomain = require('./middleware/subdomain');
-const internalRouter = require('./routes/internalRouter');
-const externalRouter = require('./routes/externalRouter');
+const mainRouter = require('./routes/mainRouter');
 
 const store = require('./db/mongo');
 
@@ -22,11 +20,8 @@ if (env === 'development') app.use(morgan('dev'));
 
 app.use(express.json());
 
-// invoke router for all internal API requests
-app.use('/', subdomain(false, internalRouter));
-
-// invoke router for all external API requests
-app.use('/', subdomain(true, externalRouter));
+// invoke router for all requests
+app.use('/', mainRouter);
 
 // shut down gracefully on any uncaught runtime exceptions
 process.on('uncaughtException', async (err) => {

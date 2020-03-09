@@ -4,6 +4,8 @@
 const store = require('../db/mongo');
 
 module.exports = (function schemalessService() {
+  const getCollectionName = apiName => `api:${apiName}`;
+
   return {
     // retrieves a complete collection
     // TODO: support pagination, sorting etc.
@@ -13,7 +15,7 @@ module.exports = (function schemalessService() {
       // directly map result array to only contain contents of data field
       // (this is a mongo cursor operation)
       try {
-        result = await store.db.collection(apiName).find({
+        result = await store.db.collection(getCollectionName(apiName)).find({
           path: {
             $regex: `^${collectionPath}$`,
           },
@@ -33,7 +35,7 @@ module.exports = (function schemalessService() {
       let result;
 
       try {
-        result = await store.db.collection(apiName).findOne({
+        result = await store.db.collection(getCollectionName(apiName)).findOne({
           'data.id': itemId,
           path: itemPath,
         });
@@ -96,7 +98,7 @@ module.exports = (function schemalessService() {
       itemData.id = itemId;
 
       try {
-        result = await store.db.collection(apiName).insertOne({
+        result = await store.db.collection(getCollectionName(apiName)).insertOne({
           path: itemPath,
           createdAt: new Date(),
           data: itemData,
@@ -111,7 +113,7 @@ module.exports = (function schemalessService() {
       let result;
 
       try {
-        result = await store.db.collection(apiName).deleteOne({
+        result = await store.db.collection(getCollectionName(apiName)).deleteOne({
           'data.id': itemId,
           path: itemPath,
         });
@@ -133,7 +135,7 @@ module.exports = (function schemalessService() {
       }, {});
 
       try {
-        result = await store.db.collection(apiName).updateOne({
+        result = await store.db.collection(getCollectionName(apiName)).updateOne({
           'data.id': itemId,
           path: itemPath,
         }, {

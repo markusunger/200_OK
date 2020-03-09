@@ -4,8 +4,8 @@ module.exports = async () => {
   await mongo.init();
 
   await Promise.all([
-    mongo.db.command({ drop: 'envious-tesla' }),
-    mongo.db.command({ drop: 'config' }),
+    mongo.db.command({ drop: 'api:envious-tesla' }),
+    mongo.db.command({ drop: 'apiConfig' }),
     mongo.db.command({ drop: 'idStore' }),
   ]);
 
@@ -23,10 +23,12 @@ module.exports = async () => {
         nextId: 3,
       },
     ]),
-    mongo.db.collection('config').insertOne({
-      subdomain: 'envious-tesla',
+    mongo.db.collection('apiConfig').insertOne({
+      apiName: 'envious-tesla',
+      apiKey: 'randomkey',
+      createdAt: Date.now(),
     }),
-    mongo.db.collection('envious-tesla').insertMany([
+    mongo.db.collection('api:envious-tesla').insertMany([
       {
         path: 'users',
         createdAt: new Date(),
