@@ -51,7 +51,7 @@ main.use(pathExtractor);
 
 // temporary middleware for debugging
 main.use((req, res, next) => {
-  // debug stuff here
+  console.log(req.body);
   next();
 });
 

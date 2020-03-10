@@ -1,16 +1,18 @@
+const errorMessage = require('../lib/errors');
+
 module.exports = function validateRequest(req, res, next) {
   const { response } = res.locals;
 
   // no API name in request URI
   if (!req.apiName) {
     response.status = 400;
-    response.addError('no API name specified');
+    response.addError(errorMessage('NO_API'));
   }
 
   // root path of API requested
   if (!req.args || req.args.length === 0) {
     response.status = 400;
-    response.addError('no path specified');
+    response.addError(errorMessage('NO_PATH'));
   }
 
   /* check for valid resource names
@@ -24,18 +26,18 @@ module.exports = function validateRequest(req, res, next) {
 
   if (resources.length > 4) {
     response.status = 400;
-    response.addError('A maximum number of four nested resources is allowed.');
+    response.addError(errorMessage('TOO_MANY_NESTED_RESOURCES'));
   }
 
   if (resources.some(resource => resource.length > 64)) {
     response.status = 400;
-    response.addError('Resource names must not be longer than 64 characters.');
+    response.addError(errorMessage('RESOURCE_NAME_TOO_LONG'));
   }
 
   const validCharacters = /^[a-zA-Z][a-zA-Z0-9-_]*$/;
   if (!resources.every(resource => validCharacters.test(resource))) {
     response.status = 400;
-    response.addError('A resource name can only contain alphanumeric characters, hyphens and underscores and must start with a letter.');
+    response.addError(errorMessage('WRONG_RESOURCE_NAME'));
   }
 
   /*
@@ -45,7 +47,18 @@ module.exports = function validateRequest(req, res, next) {
 
   if (!ids.every(id => /^[0-9]*$/.test(id))) {
     response.status = 400;
-    response.addError('A resource item id can only contain numeric characters.');
+    response.addError(errorMessage('WRONG_RESOURCE_ID'));
+  }
+
+  /*
+    check for appropriate Content-Type (application/json)
+  */
+  if (req.method === 'POST' || req.method === 'PUT') {
+    const contentType = req.get('Content-Type');
+    if (contentType !== 'application/json') {
+      response.status = 415;
+      response.addError(errorMessage('WRONG_CONTENT_TYPE', contentType));
+    }
   }
 
   /* check for valid POST requests
@@ -56,13 +69,13 @@ module.exports = function validateRequest(req, res, next) {
     // check if body present and not empty
     if (!req.body || Object.keys(req.body).length === 0) {
       response.status = 400;
-      response.addError('no POST body sent or could not be parsed.');
+      response.addError(errorMessage('NO_OR_WRONG_POST_BODY'));
     }
 
     // check if path is a valid resource collection (= odd number of path segments)
     if (req.args && req.args.length % 2 === 0) {
       response.status = 405;
-      response.addError('cannot POST to individual resource item.');
+      response.addError(errorMessage('POST_TO_RESOURCE_ITEM'));
     }
   }
 
@@ -71,7 +84,7 @@ module.exports = function validateRequest(req, res, next) {
     // check if path is a valid resource item (= even number of path segments)
     if (req.args && req.args.length % 2 !== 0) {
       response.status = 400;
-      response.addError('cannot DELETE whole collections, only specific items');
+      response.addError(errorMessage('DELETE_ON_COLLECTION'));
     }
   }
 
@@ -80,7 +93,7 @@ module.exports = function validateRequest(req, res, next) {
     // check if body is present and not empty
     if (!req.body || Object.keys(req.body).length === 0) {
       response.status = 400;
-      response.addError('no PUT body sent or could not be parsed.');
+      response.addError(errorMessage('NO_OR_WRONG_PUT_BODY'));
     }
   }
 
