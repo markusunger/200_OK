@@ -1,18 +1,16 @@
-const errorMessage = require('../lib/errors');
-
 module.exports = function validateRequest(req, res, next) {
   const { response } = res.locals;
 
   // no API name in request URI
   if (!req.apiName) {
     response.status = 400;
-    response.addError(errorMessage('NO_API'));
+    response.addError('NO_API');
   }
 
   // root path of API requested
   if (!req.args || req.args.length === 0) {
     response.status = 400;
-    response.addError(errorMessage('NO_PATH'));
+    response.addError('NO_PATH');
   }
 
   /* check for valid resource names
@@ -26,28 +24,36 @@ module.exports = function validateRequest(req, res, next) {
 
   if (resources.length > 4) {
     response.status = 400;
-    response.addError(errorMessage('TOO_MANY_NESTED_RESOURCES'));
+    response.addError('TOO_MANY_NESTED_RESOURCES');
   }
 
   if (resources.some(resource => resource.length > 64)) {
     response.status = 400;
-    response.addError(errorMessage('RESOURCE_NAME_TOO_LONG'));
+    response.addError('RESOURCE_NAME_TOO_LONG');
   }
 
   const validCharacters = /^[a-zA-Z][a-zA-Z0-9-_]*$/;
   if (!resources.every(resource => validCharacters.test(resource))) {
     response.status = 400;
-    response.addError(errorMessage('WRONG_RESOURCE_NAME'));
+    response.addError('WRONG_RESOURCE_NAME');
   }
 
   /*
-  resource ids must be numeric (since they are server-generated as incrementing integers)
+    resource ids must be numeric (since they are server-generated as incrementing integers)
   */
   const ids = req.args ? req.args.filter((segment, idx) => idx % 2 !== 0) : [];
 
   if (!ids.every(id => /^[0-9]*$/.test(id))) {
     response.status = 400;
-    response.addError(errorMessage('WRONG_RESOURCE_ID'));
+    response.addError('WRONG_RESOURCE_ID');
+  }
+
+  /*
+    check if client accepts json responses
+  */
+  if (!req.accepts('json')) {
+    response.status = 406;
+    response.addError('NO_OR_WRONG_ACCEPT');
   }
 
   /*
@@ -57,7 +63,7 @@ module.exports = function validateRequest(req, res, next) {
     const contentType = req.get('Content-Type');
     if (contentType !== 'application/json') {
       response.status = 415;
-      response.addError(errorMessage('WRONG_CONTENT_TYPE', contentType));
+      response.addError('WRONG_CONTENT_TYPE', contentType);
     }
   }
 
@@ -69,13 +75,13 @@ module.exports = function validateRequest(req, res, next) {
     // check if body present and not empty
     if (!req.body || Object.keys(req.body).length === 0) {
       response.status = 400;
-      response.addError(errorMessage('NO_OR_WRONG_POST_BODY'));
+      response.addError('NO_OR_WRONG_POST_BODY');
     }
 
     // check if path is a valid resource collection (= odd number of path segments)
     if (req.args && req.args.length % 2 === 0) {
       response.status = 405;
-      response.addError(errorMessage('POST_TO_RESOURCE_ITEM'));
+      response.addError('POST_TO_RESOURCE_ITEM');
     }
   }
 
@@ -84,7 +90,7 @@ module.exports = function validateRequest(req, res, next) {
     // check if path is a valid resource item (= even number of path segments)
     if (req.args && req.args.length % 2 !== 0) {
       response.status = 400;
-      response.addError(errorMessage('DELETE_ON_COLLECTION'));
+      response.addError('DELETE_ON_COLLECTION');
     }
   }
 
@@ -93,16 +99,13 @@ module.exports = function validateRequest(req, res, next) {
     // check if body is present and not empty
     if (!req.body || Object.keys(req.body).length === 0) {
       response.status = 400;
-      response.addError(errorMessage('NO_OR_WRONG_PUT_BODY'));
+      response.addError('NO_OR_WRONG_PUT_BODY');
     }
   }
 
   // send early error response if request is invalid
   if (response.hasErrors()) {
-    res.status(response.status);
-    res.json({
-      error: response.errors,
-    });
+    response.send(res);
   } else {
     next();
   }

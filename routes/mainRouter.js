@@ -24,11 +24,14 @@ const rateLimiter = new RateLimiterMemory({
   duration: 1,
 });
 
-// set up custom response objects
+// set up custom response object
 main.use((req, res, next) => {
   res.locals.response = new Response();
   next();
 });
+
+// CORS support and general OPTIONS request responses
+main.use(cors());
 
 // rate limiting first to send 429 without any database lookups
 // when too many requests were sent
@@ -39,9 +42,9 @@ main.use(async (req, res, next) => {
     await rateLimiter.consume(hostname, 1);
     next();
   } catch (err) {
-    // TODO: does this still need CORS headers to be successfully forwarded by a browser?
     response.status = 429;
-    next(new Error('Too many requests. Better slow down.'));
+    response.addError('TOO_MANY_REQUESTS');
+    response.send();
   }
 });
 
@@ -51,15 +54,11 @@ main.use(pathExtractor);
 
 // temporary middleware for debugging
 main.use((req, res, next) => {
-  console.log(req.body);
   next();
 });
 
 // validates request and sends early error response if invalid request
 main.use(validateRequest);
-
-// CORS support and general OPTIONS request responses
-main.use(cors());
 
 /*
    --------------------
@@ -75,7 +74,7 @@ main.get('*', async (req, res, next) => {
     const data = await getController(apiName, args, next);
     if (!data) {
       response.status = 404;
-      response.addError(`No data found for ${args.join('/')}.`);
+      response.addError('ITEM_NOT_FOUND', args.join('/'));
     } else {
       response.status = 200;
       response.body = data;
@@ -94,7 +93,7 @@ main.post('*', async (req, res, next) => {
     const data = await postController(apiName, args, body, next);
     if (!data) {
       response.status = 400;
-      response.addError('Data could not be inserted.');
+      response.addError('POST_UNSUCCESSFUL');
     } else {
       response.status = 201;
       response.body = data;
@@ -113,7 +112,7 @@ main.put('*', async (req, res, next) => {
     const data = await putController(apiName, args, body, next);
     if (!data) {
       response.status = 400;
-      response.addError('Data could not be updated (most likely because the item doesn\'t exist).');
+      response.addError('PUT_UNSUCCESSFUL');
     } else {
       response.status = 204;
     }
@@ -131,7 +130,7 @@ main.delete('*', async (req, res, next) => {
     const data = await deleteController(apiName, args, next);
     if (!data) {
       response.status = 404;
-      response.addError('Data could not be deleted (because it likely isn\'t there).');
+      response.addError('DELETE_UNSUCCESSFUL');
     } else {
       response.status = 204;
     }
@@ -144,17 +143,7 @@ main.delete('*', async (req, res, next) => {
 // send responses depending on response variables
 main.use((req, res, next) => {
   const { response } = res.locals;
-
-  res.set(response.getHeaders());
-
-  res.status(response.status);
-  if (response.hasErrors()) {
-    res.json({ error: response.errors });
-  } else if (response.body) {
-    res.json(response.body);
-  } else {
-    res.end();
-  }
+  response.send(res);
 });
 
 // general error handler

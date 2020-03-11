@@ -1,5 +1,4 @@
 const store = require('../services/metadata');
-const errorMessage = require('../lib/errors');
 
 module.exports = async function apiLookup(req, res, next) {
   const { subdomains } = req;
@@ -12,11 +11,12 @@ module.exports = async function apiLookup(req, res, next) {
     const apiData = await store.getApiInfo(apiName, next);
     if (!apiData) {
       response.status = 400;
-      next(new Error(errorMessage('API_NOT_FOUND', apiName)));
+      response.addError('API_NOT_FOUND', apiName);
+      response.send(res);
+    } else {
+      next();
     }
   } catch (err) {
     next(err);
   }
-
-  next();
 };
