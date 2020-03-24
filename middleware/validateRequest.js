@@ -105,7 +105,7 @@ module.exports = function validateRequest(req, res, next) {
 
   // send early error response if request is invalid
   if (response.hasErrors()) {
-    response.send(res);
+    response.send(req, res);
   } else {
     next();
   }

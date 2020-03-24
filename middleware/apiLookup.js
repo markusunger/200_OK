@@ -12,7 +12,7 @@ module.exports = async function apiLookup(req, res, next) {
     if (!apiData) {
       response.status = 400;
       response.addError('API_NOT_FOUND', apiName);
-      response.send(res);
+      response.send(req, res);
     } else {
       next();
     }

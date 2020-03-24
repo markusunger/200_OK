@@ -44,7 +44,7 @@ main.use(async (req, res, next) => {
   } catch (err) {
     response.status = 429;
     response.addError('TOO_MANY_REQUESTS');
-    response.send();
+    response.send(req, res);
   }
 });
 
@@ -143,7 +143,7 @@ main.delete('*', async (req, res, next) => {
 // send responses depending on response variables
 main.use((req, res, next) => {
   const { response } = res.locals;
-  response.send(res);
+  response.send(req, res);
 });
 
 // general error handler
@@ -155,7 +155,7 @@ main.use((err, req, res, next) => {
   if (response.status === 200) response.status = 500;
   const error = process.env !== 'production' ? err.message : 'Internal server error.';
   response.addError(error);
-  res.status(response.status).json({ error: response.errors });
+  response.send(req, res);
 });
 
 module.exports = main;
