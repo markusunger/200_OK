@@ -31,7 +31,7 @@ module.exports = (function createPublisher() {
       method: req.method,
       target: req.originalUrl,
       headers: requestHeaders,
-      body: req.body,
+      body: req.body || {},
     };
   };
 
@@ -39,7 +39,7 @@ module.exports = (function createPublisher() {
     sentAt: Date.now(),
     status: res.statusCode,
     headers: res.getHeaders(),
-    body: res.body,
+    body: res.body || {},
   });
 
   const stringifyMessage = (msg) => {
