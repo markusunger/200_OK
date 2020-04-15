@@ -6,6 +6,7 @@ const Response = require('../lib/response');
 const apiLookup = require('../middleware/apiLookup');
 const pathExtractor = require('../middleware/pathExtractor');
 const validateRequest = require('../middleware/validateRequest');
+const predefinedLookup = require('../middleware/predefinedLookup');
 const cors = require('../middleware/cors');
 
 const getController = require('../controllers/getController');
@@ -30,9 +31,6 @@ main.use((req, res, next) => {
   next();
 });
 
-// CORS support and general OPTIONS request responses
-main.use(cors());
-
 // rate limiting first to send 429 without any database lookups
 // when too many requests were sent
 main.use(async (req, res, next) => {
@@ -52,21 +50,58 @@ main.use(async (req, res, next) => {
 main.use(apiLookup);
 main.use(pathExtractor);
 
+// validates request and sends early error response if invalid request
+main.use(validateRequest);
+
+// look up predefined custom endpoint behavior and populate request object
+// so that CORS can properly handle OPTIONS requests
+main.use(predefinedLookup);
+
+// CORS support and general OPTIONS request responses
+main.use(cors());
+
 // temporary middleware for debugging
 main.use((req, res, next) => {
   next();
 });
 
-// validates request and sends early error response if invalid request
-main.use(validateRequest);
-
 /*
-   --------------------
-   HTTP method handlers
-   --------------------
+  --------------------
+  custom behavior handler
+  --------------------
 */
 
-main.get('*', async (req, res, next) => {
+main.all('*', (req, res, next) => {
+  const { predefined, method } = req;
+  const { response } = res.locals;
+
+  // skip if no predefined response exists
+  if (!predefined) return next();
+
+  // check if method is allowed
+  if (!Object.prototype.hasOwnProperty.call(predefined, method)) {
+    response.status = 405;
+    response.addError('NO_PREDEFINED_METHOD', method);
+    return next();
+  }
+
+  response.status = 200;
+  response.body = predefined[method];
+  return next();
+});
+
+const skipPredefined = (req, res, next) => {
+  if (req.predefined) return next('route');
+  return next();
+};
+
+/*
+  --------------------
+  HTTP method handlers
+  --------------------
+*/
+
+main.get('*', skipPredefined, async (req, res, next) => {
   const { apiName, args } = req;
   const { response } = res.locals;
 
@@ -85,7 +120,7 @@ main.get('*', async (req, res, next) => {
   next();
 });
 
-main.post('*', async (req, res, next) => {
+main.post('*', skipPredefined, async (req, res, next) => {
   const { apiName, args, body } = req;
   const { response } = res.locals;
 
@@ -104,7 +139,7 @@ main.post('*', async (req, res, next) => {
   next();
 });
 
-main.put('*', async (req, res, next) => {
+main.put('*', skipPredefined, async (req, res, next) => {
   const { apiName, args, body } = req;
   const { response } = res.locals;
 
@@ -122,7 +157,7 @@ main.put('*', async (req, res, next) => {
   next();
 });
 
-main.delete('*', async (req, res, next) => {
+main.delete('*', skipPredefined, async (req, res, next) => {
   const { apiName, args } = req;
   const { response } = res.locals;
 
