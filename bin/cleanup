@@ -1,0 +1,69 @@
+#!/usr/bin/node
+
+// this tool will be run by a cronjob every 24 hrs, deleting all APIs and their
+// associated data when they don't meet the cutoff date (current date - 7 days)
+// for their creation
+
+// deletion is not done in transactions (since they're only supported with replica
+// sets or sharded clusters), so logging will provide the only way to see if
+// something went wrong and the db might be inconsistent
+
+/* eslint-disable no-console */
+
+const store = require('../db/mongo');
+const { apiExpirationDays } = require('../lib/config');
+
+(async function cleanup() {
+  // first, register handlers for unexpected crashes
+  process.on('uncaughtException', async (error) => {
+    console.error('Unexpected shutdown!');
+    console.error(error);
+    await store.shutdown();
+    process.exit(-1);
+  });
+
+  process.on('unhandledRejection', async (error) => {
+    console.error('Promise rejection not handled properly!');
+    console.error(error);
+    await store.shutdown();
+    process.exit(-1);
+  });
+
+  // logger function to add timestamps to logs
+  function log(msg) {
+    const date = new Date();
+    // (all hail the great date method getMonth() that treats the first month as a 0)
+    const timestamp = `[${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}]`;
+    console.log(`${timestamp} ${msg}`);
+  }
+
+  // find all APIs that need to be deleted (names only)
+  await store.init();
+  const cutoffDate = new Date();
+  cutoffDate.setDate(cutoffDate.getDate() - apiExpirationDays);
+  const queryData = await store.db.collection('apiConfig').find({
+    createdAt: { $lt: cutoffDate },
+  });
+  const toDelete = await queryData.map(data => data.apiName).toArray();
+  log(`The following APIs will be deleted: ${toDelete}`);
+
+  // loop through all API names that are ripe for deletion
+  toDelete.forEach(async (apiName) => {
+    log(`----------- ${apiName} -----------`);
+    // drop data and custom route collections
+    await store.db.dropCollection(`api:${apiName}`);
+    await store.db.dropCollection(`pre:${apiName}`);
+    log('Removed data and custom route collections ...');
+
+    // drop residual id counters
+    const idRemoval = await store.db.collection('idStore').deleteMany({
+      resource: { $regex: `^${apiName}` },
+    });
+    log(`${idRemoval.deletedCount} entries from id counter collection removed.`);
+
+    // remove API name from a potential user's connected API list
+    const userCleanup 
+  });
+
+  store.shutdown();
+}());
