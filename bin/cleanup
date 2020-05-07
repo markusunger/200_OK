@@ -47,13 +47,25 @@ const { apiExpirationDays } = require('../lib/config');
   const toDelete = await queryData.map(data => data.apiName).toArray();
   log(`The following APIs will be deleted: ${toDelete}`);
 
-  // loop through all API names that are ripe for deletion
-  toDelete.forEach(async (apiName) => {
+  // define async function to run for each API
+  const deleteApiArtifacts = async (apiName) => {
     log(`----------- ${apiName} -----------`);
     // drop data and custom route collections
-    await store.db.dropCollection(`api:${apiName}`);
-    await store.db.dropCollection(`pre:${apiName}`);
-    log('Removed data and custom route collections ...');
+    try {
+      await store.db.dropCollection(`api:${apiName}`);
+      log('Removed data collection.');
+    } catch (_) {
+      log('Data collection did not exist (or could not be dropped).');
+      await store.init();
+    }
+
+    try {
+      await store.db.dropCollection(`pre:${apiName}`);
+      log('Removed and custom route definitions.');
+    } catch (_) {
+      log('Custom route collection did not exist (or could not be dropped).');
+      await store.init();
+    }
 
     // drop residual id counters
     const idRemoval = await store.db.collection('idStore').deleteMany({
@@ -62,8 +74,36 @@ const { apiExpirationDays } = require('../lib/config');
     log(`${idRemoval.deletedCount} entries from id counter collection removed.`);
 
     // remove API name from a potential user's connected API list
-    const userCleanup 
-  });
+    const userCleanup = await store.db.collection('users').findOneAndUpdate({
+      connectedApis: apiName,
+    }, {
+      $pull: {
+        connectedApis: apiName,
+      },
+    });
+    if (userCleanup.value) {
+      log(`Removed entry from user ${userCleanup.value.github.name}'s collection.`);
+    } else {
+      log('API was not connected to a user.');
+    }
+
+    // remove API from central api config collection
+    const apiRemoval = await store.db.collection('apiConfig').deleteOne({
+      apiName,
+    });
+    if (apiRemoval.deletedCount > 0) {
+      log('Successfully removed API from the database.');
+    } else {
+      log('WARNING! API was not fully removed from the database (entry in apiConfig not found or deleted).');
+    }
+  };
+
+  // sequentially run deletion function for all API names
+  await toDelete.reduce(async (promise, apiName) => {
+    await promise;
+    await deleteApiArtifacts(apiName);
+  }, Promise.resolve(null));
 
   store.shutdown();
+  process.exit();
 }());
