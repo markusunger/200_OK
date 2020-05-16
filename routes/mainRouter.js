@@ -65,11 +65,6 @@ main.use(validateParent);
 // CORS support and general OPTIONS request responses
 main.use(cors());
 
-// temporary middleware for debugging
-main.use((req, res, next) => {
-  return next();
-});
-
 /*
   --------------------
   custom behavior handler
