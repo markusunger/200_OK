@@ -3,6 +3,7 @@
 const request = require('supertest');
 const mongo = require('../db/mongo');
 const app = require('../app');
+const errors = require('../lib/errors');
 const seed = require('./seeds/mongo.seed');
 
 beforeAll(seed);
@@ -13,7 +14,7 @@ describe('GET endpoint tests', () => {
       .get('/users')
       .set('Host', 'fnord.200ok.app');
     expect(response.status).toBe(400);
-    expect(response.body.error[0]).toBe('API with the name \'fnord\' does not exist.');
+    expect(response.body.error[0]).toBe(errors('API_NOT_FOUND', ['fnord']));
     done();
   });
 
@@ -22,7 +23,7 @@ describe('GET endpoint tests', () => {
       .get('/')
       .set('Host', 'envious-tesla.200ok.app');
     expect(response.status).toBe(400);
-    expect(response.body.error[0]).toBe('no path specified');
+    expect(response.body.error[0]).toBe(errors('NO_PATH'));
     done();
   });
 
@@ -41,7 +42,7 @@ describe('GET endpoint tests', () => {
       .get('/users/7')
       .set('Host', 'envious-tesla.200ok.app');
     expect(response.status).toBe(404);
-    expect(response.body.error[0]).toBe('No data found for users/7.');
+    expect(response.body.error[0]).toBe(errors('ITEM_NOT_FOUND', ['users/7']));
     done();
   });
 

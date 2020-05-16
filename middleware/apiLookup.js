@@ -8,6 +8,7 @@ module.exports = async function apiLookup(req, res, next) {
 
   try {
     const apiData = await store.getApiInfo(req.apiName, next);
+
     if (!apiData) {
       response.status = 400;
       response.addError('API_NOT_FOUND', req.apiName);

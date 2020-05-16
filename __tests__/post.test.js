@@ -3,6 +3,7 @@
 const request = require('supertest');
 const mongo = require('../db/mongo');
 const app = require('../app');
+const errors = require('../lib/errors');
 const seed = require('./seeds/mongo.seed');
 
 beforeAll(seed);
@@ -17,7 +18,7 @@ describe('POST endpoint tests', () => {
         isAdmin: false,
       });
     expect(response.status).toBe(405);
-    expect(response.body.error[0]).toBe('cannot POST to individual resource item.');
+    expect(response.body.error[0]).toBe(errors('POST_TO_RESOURCE_ITEM'));
     done();
   });
 
@@ -27,7 +28,7 @@ describe('POST endpoint tests', () => {
       .set('Host', 'envious-tesla.200ok.app')
       .send({});
     expect(response.status).toBe(400);
-    expect(response.body.error[0]).toBe('no POST body sent or could not be parsed.');
+    expect(response.body.error[0]).toBe(errors('NO_OR_WRONG_POST_BODY'));
     done();
   });
 

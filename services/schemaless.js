@@ -8,8 +8,7 @@ module.exports = (function schemalessService() {
 
   return {
     // retrieves a complete collection
-    // TODO: support pagination, sorting etc.
-    getCollection: async function getCollection(apiName, collectionPath, next) {
+    getCollection: async function getCollection(apiName, collectionPath) {
       let result;
 
       // directly map result array to only contain contents of data field
@@ -21,17 +20,14 @@ module.exports = (function schemalessService() {
           },
         }).map(item => item.data).toArray();
       } catch (error) {
-        next(error);
+        throw (error);
       }
 
-      // TODO: consider switching to some prerequisites for requesting an empty resource collection
-      // it should work for empty collections (e.g. todo list with no items), but should every
-      // collection endpoint really return an empty array and a 200 if no items are found for it?
       return result || null;
     },
 
     // retrieves a specific item with an id from a collection
-    getItem: async function getItem(apiName, itemId, itemPath, next) {
+    getItem: async function getItem(apiName, itemId, itemPath) {
       let result;
 
       try {
@@ -40,10 +36,29 @@ module.exports = (function schemalessService() {
           path: itemPath,
         });
       } catch (error) {
-        next(error);
+        throw (error);
       }
 
       return result ? result.data : null;
+    },
+
+    // verifies whether a certain item exists without returning any data
+    verifyItem: async function verifyExistence(apiName, itemId, itemPath) {
+      try {
+        const data = await store.db.collection(getCollectionName(apiName)).find({
+          'data.id': itemId,
+          path: itemPath,
+        }).map(item => item.data).toArray();
+        console.log(data);
+
+        const doesExist = await store.db.collection(getCollectionName(apiName)).find({
+          'data.id': itemId,
+          path: itemPath,
+        }).count() > 0;
+        return doesExist;
+      } catch (error) {
+        throw (error);
+      }
     },
 
     // retrieves the next item id for a specific resource or creates a new

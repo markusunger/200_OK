@@ -7,6 +7,7 @@ const apiLookup = require('../middleware/apiLookup');
 const pathExtractor = require('../middleware/pathExtractor');
 const validateRequest = require('../middleware/validateRequest');
 const predefinedLookup = require('../middleware/predefinedLookup');
+const validateParent = require('../middleware/validateParent');
 const cors = require('../middleware/cors');
 
 const getController = require('../controllers/getController');
@@ -28,7 +29,7 @@ const rateLimiter = new RateLimiterMemory({
 // set up custom response object
 main.use((req, res, next) => {
   res.locals.response = new Response();
-  next();
+  return next();
 });
 
 // rate limiting first to send 429 without any database lookups
@@ -38,12 +39,12 @@ main.use(async (req, res, next) => {
   const { response } = res.locals;
   try {
     await rateLimiter.consume(hostname, 1);
-    next();
   } catch (err) {
     response.status = 429;
     response.addError('TOO_MANY_REQUESTS');
     response.send(req, res);
   }
+  return next();
 });
 
 // request handling middleware
@@ -57,12 +58,16 @@ main.use(validateRequest);
 // so that CORS can properly handle OPTIONS requests
 main.use(predefinedLookup);
 
+// handle check for existing parent collection/item when
+// requesting a nested reosurce collection or item
+main.use(validateParent);
+
 // CORS support and general OPTIONS request responses
 main.use(cors());
 
 // temporary middleware for debugging
 main.use((req, res, next) => {
-  next();
+  return next();
 });
 
 /*
@@ -106,7 +111,7 @@ main.get('*', skipPredefined, async (req, res, next) => {
   const { response } = res.locals;
 
   try {
-    const data = await getController(apiName, args, next);
+    const data = await getController(apiName, args);
     if (!data) {
       response.status = 404;
       response.addError('ITEM_NOT_FOUND', args.join('/'));
