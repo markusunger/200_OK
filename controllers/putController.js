@@ -6,15 +6,15 @@
 
 const store = require('../services/schemaless');
 
-module.exports = async function putController(apiName, args, itemData, next) {
+module.exports = async function putController(apiName, args, itemData) {
   let result;
   const itemId = parseInt(args[args.length - 1], 10);
   const itemPath = args.slice(0, args.length - 1).join('/');
 
   try {
-    result = await store.updateItem(apiName, itemId, itemData, itemPath, next);
+    result = await store.updateItem(apiName, itemId, itemData, itemPath);
   } catch (error) {
-    next(error);
+    throw (error);
   }
 
   return result;

@@ -144,7 +144,7 @@ main.put('*', skipPredefined, async (req, res, next) => {
   const { response } = res.locals;
 
   try {
-    const data = await putController(apiName, args, body, next);
+    const data = await putController(apiName, args, body);
     if (!data) {
       response.status = 400;
       response.addError('PUT_UNSUCCESSFUL');
@@ -186,7 +186,7 @@ main.use((err, req, res, next) => {
   const { response } = res.locals;
 
   // only print stack trace and return detailed error message in dev enviroment
-  if (env === 'development') console.log(err);
+  if (env === 'development') console.error(err);
   if (response.status === 200) response.status = 500;
   const error = process.env !== 'production' ? err.message : 'Internal server error.';
   response.addError(error);

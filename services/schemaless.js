@@ -45,12 +45,6 @@ module.exports = (function schemalessService() {
     // verifies whether a certain item exists without returning any data
     verifyItem: async function verifyExistence(apiName, itemId, itemPath) {
       try {
-        const data = await store.db.collection(getCollectionName(apiName)).find({
-          'data.id': itemId,
-          path: itemPath,
-        }).map(item => item.data).toArray();
-        console.log(data);
-
         const doesExist = await store.db.collection(getCollectionName(apiName)).find({
           'data.id': itemId,
           path: itemPath,
@@ -139,7 +133,7 @@ module.exports = (function schemalessService() {
       return (result && result.deletedCount > 0) ? true : null;
     },
 
-    updateItem: async function updateItem(apiName, itemId, itemData, itemPath, next) {
+    updateItem: async function updateItem(apiName, itemId, itemData, itemPath) {
       let result;
 
       // flatten itemData into object with 'data.<x>' keys to be able to properly $set,
@@ -149,6 +143,10 @@ module.exports = (function schemalessService() {
         return obj;
       }, {});
 
+      // early return in case of empty dataset to update
+      // (technically not an error, so it will return a 204)
+      if (Object.entries(insertData).length === 0) return true;
+
       try {
         result = await store.db.collection(getCollectionName(apiName)).updateOne({
           'data.id': itemId,
@@ -157,7 +155,7 @@ module.exports = (function schemalessService() {
           $set: insertData,
         });
       } catch (error) {
-        next(error);
+        throw (error);
       }
 
       return (result && result.modifiedCount > 0) ? true : null;
