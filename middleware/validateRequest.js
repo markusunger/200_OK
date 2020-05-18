@@ -63,7 +63,7 @@ module.exports = function validateRequest(req, res, next) {
     const contentType = req.get('Content-Type');
     if (contentType !== 'application/json') {
       response.status = 415;
-      response.addError('WRONG_CONTENT_TYPE', contentType);
+      response.addError('WRONG_CONTENT_TYPE', contentType || 'none');
     }
   }
 
