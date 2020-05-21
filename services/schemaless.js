@@ -20,7 +20,7 @@ module.exports = (function schemalessService() {
           },
         }).map(item => item.data).toArray();
       } catch (error) {
-        throw (error);
+        throw error;
       }
 
       return result || null;
@@ -36,7 +36,7 @@ module.exports = (function schemalessService() {
           path: itemPath,
         });
       } catch (error) {
-        throw (error);
+        throw error;
       }
 
       return result ? result.data : null;
@@ -51,7 +51,7 @@ module.exports = (function schemalessService() {
         }).count() > 0;
         return doesExist;
       } catch (error) {
-        throw (error);
+        throw error;
       }
     },
 
@@ -118,7 +118,7 @@ module.exports = (function schemalessService() {
       return result;
     },
 
-    deleteItem: async function deleteItem(apiName, itemId, itemPath, next) {
+    deleteItem: async function deleteItem(apiName, itemId, itemPath) {
       let result;
 
       try {
@@ -127,10 +127,37 @@ module.exports = (function schemalessService() {
           path: itemPath,
         });
       } catch (error) {
-        next(error);
+        throw error;
       }
 
       return (result && result.deletedCount > 0) ? true : null;
+    },
+
+    deleteCollection: async function deleteCollection(apiName, itemPath) {
+      // delete all collection items and children items
+      const pathPattern = new RegExp(`^${itemPath}.*`);
+
+      try {
+        const { result } = await store.db.collection(getCollectionName(apiName)).deleteMany({
+          path: pathPattern,
+        });
+        if (result.ok !== 1) return null;
+      } catch (error) {
+        throw error;
+      }
+
+      // delete entries for all affected collections from id store
+      const idPattern = new RegExp(`^${apiName}:${itemPath}.*`);
+      try {
+        const { result } = await store.db.collection('idStore').deleteMany({
+          resource: idPattern,
+        });
+        if (result.ok !== 1) return null;
+      } catch (error) {
+        throw error;
+      }
+
+      return true;
     },
 
     updateItem: async function updateItem(apiName, itemId, itemData, itemPath) {
@@ -155,7 +182,7 @@ module.exports = (function schemalessService() {
           $set: insertData,
         });
       } catch (error) {
-        throw (error);
+        throw error;
       }
 
       return (result && result.modifiedCount > 0) ? true : null;

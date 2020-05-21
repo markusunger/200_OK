@@ -20,7 +20,7 @@ module.exports = async function getController(apiName, args) {
       const result = await store.getCollection(apiName, collectionPath);
       return result;
     } catch (error) {
-      throw (error);
+      throw error;
     }
   }
 
@@ -31,7 +31,7 @@ module.exports = async function getController(apiName, args) {
       const result = await store.getItem(apiName, itemId, itemPath);
       return result;
     } catch (error) {
-      throw (error);
+      throw error;
     }
   }
 

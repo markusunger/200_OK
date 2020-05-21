@@ -162,7 +162,7 @@ main.delete('*', skipPredefined, async (req, res, next) => {
   const { response } = res.locals;
 
   try {
-    const data = await deleteController(apiName, args, next);
+    const data = await deleteController(apiName, args);
     if (!data) {
       response.status = 404;
       response.addError('DELETE_UNSUCCESSFUL');

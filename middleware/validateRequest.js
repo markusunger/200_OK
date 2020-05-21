@@ -85,15 +85,6 @@ module.exports = function validateRequest(req, res, next) {
     }
   }
 
-  /* check for valid DELETE requests */
-  if (req.method === 'DELETE') {
-    // check if path is a valid resource item (= even number of path segments)
-    if (req.args && req.args.length % 2 !== 0) {
-      response.status = 400;
-      response.addError('DELETE_ON_COLLECTION');
-    }
-  }
-
   /* check for valid PUT requests */
   if (req.method === 'PUT') {
     // check if body is present and not empty

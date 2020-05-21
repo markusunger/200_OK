@@ -10,7 +10,7 @@ module.exports = (function predefinedService() {
           path,
         });
       } catch (error) {
-        throw (error);
+        throw error;
       }
 
       return result ? result.data : null;

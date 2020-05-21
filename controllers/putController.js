@@ -14,7 +14,7 @@ module.exports = async function putController(apiName, args, itemData) {
   try {
     result = await store.updateItem(apiName, itemId, itemData, itemPath);
   } catch (error) {
-    throw (error);
+    throw error;
   }
 
   return result;
