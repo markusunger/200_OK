@@ -16,11 +16,15 @@ module.exports = function cors(allowOrigin = '*') {
     // explicitly after the wildcard if it ever becomes necessary!)
     response.addHeader('Access-Control-Expose-Headers', '*');
 
-    // don't let the CORS request fail for any unimportant present headers
-    response.addHeader('Access-Control-Allow-Headers', 'Accept, *');
-
     // handle OPTIONS preflight request
     if (req.method === 'OPTIONS') {
+      // reflect all access-control-request-headers back because the API does not
+      // care about any custom headers - explicitly allowing Accept circumvents some of the
+      // CORS-safe header restrictions
+      const allowHeaders = `Accept,${req.headers['access-control-request-headers']}`;
+      response.addHeader('Vary', 'Access-Control-Request-Headers');
+      response.addHeader('Access-Control-Allow-Headers', allowHeaders);
+
       // retrieve allowed endpoint methods from apiDetails or allow all
       const { allowedMethods } = apiDetails || {
         allowedMethods: options.supportedMethods,
