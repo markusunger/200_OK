@@ -2,7 +2,7 @@ const store = require('../db/mongo');
 
 module.exports = {
   // retrieves metadata about the specified API
-  getApiInfo: async function getApiInfo(apiName, next) {
+  getApiInfo: async function getApiInfo(apiName) {
     let result;
 
     try {
@@ -10,7 +10,7 @@ module.exports = {
         apiName,
       });
     } catch (error) {
-      next(error);
+      throw error;
     }
     return result;
   },

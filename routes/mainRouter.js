@@ -5,6 +5,7 @@ const Response = require('../lib/response');
 
 const apiLookup = require('../middleware/apiLookup');
 const pathExtractor = require('../middleware/pathExtractor');
+const apiAuthorization = require('../middleware/apiAuthorization');
 const validateRequest = require('../middleware/validateRequest');
 const predefinedLookup = require('../middleware/predefinedLookup');
 const validateParent = require('../middleware/validateParent');
@@ -50,6 +51,8 @@ main.use(async (req, res, next) => {
 // request handling middleware
 main.use(apiLookup);
 main.use(pathExtractor);
+
+main.use(apiAuthorization);
 
 // validates request and sends early error response if invalid request
 main.use(validateRequest);
