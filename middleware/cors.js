@@ -25,12 +25,17 @@ module.exports = function cors(allowOrigin = '*') {
       response.addHeader('Vary', 'Access-Control-Request-Headers');
       response.addHeader('Access-Control-Allow-Headers', allowHeaders);
 
-      // retrieve allowed endpoint methods from apiDetails or allow all
-      const { allowedMethods } = apiDetails || {
-        allowedMethods: options.supportedMethods,
-      };
+      // until further research and validation, allow all request methods specified in the options
+      // and let the API send a NO_PREDEFINED_METHOD error if the method was disabled for a custom
+      // route -> better allow the CORS request and send an explicit error than block the complete
+      // response client-side
+
+      // const { allowedMethods } = apiDetails || {
+      //   allowedMethods: options.supportedMethods,
+      // };
+
       options.supportedMethods
-        .filter(method => allowedMethods.includes(method))
+        // .filter(method => allowedMethods.includes(method))
         .forEach(supportedMethod => response.addHeader(
           'Access-Control-Allow-Methods', supportedMethod,
         ));
