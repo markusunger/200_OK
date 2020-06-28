@@ -54,12 +54,12 @@ main.use(pathExtractor);
 
 main.use(apiAuthorization);
 
-// validates request and sends early error response if invalid request
-main.use(validateRequest);
-
 // look up predefined custom endpoint behavior and populate request object
 // so that CORS can properly handle OPTIONS requests
 main.use(predefinedLookup);
+
+// validates request and sends early error response if invalid request
+main.use(validateRequest);
 
 // handle check for existing parent collection/item when
 // requesting a nested reosurce collection or item

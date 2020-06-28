@@ -1,6 +1,10 @@
 module.exports = function validateRequest(req, res, next) {
   const { response } = res.locals;
 
+  // do not attempt validation if a predefined response has been
+  // found
+  if (req.predefined) return next();
+
   // no API name in request URI
   if (!req.apiName) {
     response.status = 400;

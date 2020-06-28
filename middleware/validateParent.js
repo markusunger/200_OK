@@ -6,6 +6,9 @@ module.exports = async function validateParent(req, res, next) {
   // skip middleware if target is not a nested collection/item
   if (args.length <= 2) return next();
 
+  // also skip middleware if a predefined response has been found
+  if (req.predefined) return next();
+
   const { response } = res.locals;
 
   const targetIsCollection = args.length % 2 !== 0;
